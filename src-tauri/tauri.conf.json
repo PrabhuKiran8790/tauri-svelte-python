@@ -1,10 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Test App",
-  "version": "1.0.0",
-  "identifier": "com.prabhu.testapp",
+  "productName": "Data Analyzer Pro",
+  "version": "2.1.0",
+  "identifier": "com.datacorp.dataanalyzerpro",
   "build": {
-    "beforeDevCommand": "pnpm run dev:tauri",
+    "beforeDevCommand": "pnpm dev:tauri",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../build"
@@ -12,11 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "Test App",
-        "width": 1200,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600,
+        "title": "Data Analyzer Pro",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1000,
+        "minHeight": 700,
         "resizable": true,
         "fullscreen": false
       }
@@ -38,9 +38,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "category": "Productivity",
-    "shortDescription": "Desktop app with Python backend",
-    "longDescription": "A test desktop application that combines the power of Tauri, SvelteKit frontend, and Python FastAPI backend for maximum flexibility and performance.",
-    "copyright": "\u00a9 2024 Your Company. All rights reserved."
+    "category": "Business",
+    "shortDescription": "Professional data analysis desktop app",
+    "longDescription": "Data Analyzer Pro is a comprehensive desktop application that combines powerful Python data processing capabilities with a modern, intuitive user interface. Perfect for data scientists, analysts, and business professionals who need advanced data manipulation tools.",
+    "copyright": "\u00a9 2024 DataCorp Solutions. All rights reserved."
   }
 }

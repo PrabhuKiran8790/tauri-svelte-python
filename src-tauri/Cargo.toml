@@ -1,8 +1,8 @@
 [package]
-name = "test-app"
-version = "1.0.0"
-description = "A test desktop application built with Tauri, SvelteKit, and Python"
-authors = ["Prabhu Kiran Konda"]
+name = "data-analyzer-pro"
+version = "2.1.0"
+description = "Professional data analysis tool with Python backend and modern UI"
+authors = ["DataCorp Solutions"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

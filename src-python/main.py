@@ -17,7 +17,7 @@ from uvicorn import Config, Server
 
 from api.endpoints import router as api_router
 
-PORT_API = 8008
+PORT_API = 8009
 server_instance = None
 
 # Detect running mode
