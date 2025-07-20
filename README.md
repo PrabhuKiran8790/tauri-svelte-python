@@ -290,7 +290,7 @@ This creates platform-specific bundles in `src-tauri/target/release/bundle/`:
 python build.py --sidecar
 
 # Complete build
-pnpm run build
+python build.py
 
 # this is also same as above
 pnpm tauri build
