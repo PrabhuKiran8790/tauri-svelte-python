@@ -127,9 +127,9 @@
 <div class="min-h-screen w-full bg-background p-6">
   <div class="mx-auto max-w-7xl space-y-8">
     <div class="text-center">
-      <h1 class="text-4xl font-bold tracking-tight">Data Analyzer Pro</h1>
+      <h1 class="text-4xl font-bold tracking-tight">Tauri + Svelte + Python</h1>
       <p class="text-lg text-muted-foreground mt-2">
-        Test your Python FastAPI backend with dynamic port discovery
+        Template with dynamic port discovery - Test your Python FastAPI backend
       </p>
 
       <!-- API Status Indicator -->

@@ -1,7 +1,7 @@
 {
-  "name": "data-analyzer-pro",
+  "name": "tauri-svelte-python-template",
   "version": "2.1.0",
-  "description": "Professional data analysis tool with Python backend and modern UI",
+  "description": "A modern desktop application template combining Tauri, SvelteKit, and Python FastAPI",
   "type": "module",
   "scripts": {
     "install-reqs": "pnpm install && pip3 install -r src-python/requirements.txt",
@@ -56,5 +56,5 @@
       "esbuild"
     ]
   },
-  "author": "DataCorp Solutions"
+  "author": "Template Author"
 }

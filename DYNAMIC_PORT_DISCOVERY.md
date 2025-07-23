@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Data Analyzer Pro application implements a robust dynamic port discovery system that automatically finds available ports for the Python FastAPI backend, eliminating port conflicts and improving the development experience.
+This Tauri + Svelte + Python template implements a robust dynamic port discovery system that automatically finds available ports for the Python FastAPI backend, eliminating port conflicts and improving the development experience.
 
 ## How It Works
 

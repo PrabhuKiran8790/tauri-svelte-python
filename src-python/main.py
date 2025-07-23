@@ -79,7 +79,7 @@ def announce_port_info(port):
         print(f"[{mode_label}] API docs: http://127.0.0.1:{port}/docs", flush=True)
 
 # Create FastAPI app
-app = FastAPI(title="Data Analyzer Pro API", version="2.1.0")
+app = FastAPI(title="Tauri + Svelte + Python Template API", version="2.1.0")
 
 # Add CORS - will be updated with discovered port
 cors_origins = [
@@ -104,7 +104,7 @@ app.include_router(api_router, prefix="/v1")
 @app.get("/")
 async def root():
     return {
-        "message": "Data Analyzer Pro API", 
+        "message": "Tauri + Svelte + Python Template API", 
         "status": "running",
         "mode": mode_label,
         "version": "2.1.0"
@@ -177,7 +177,7 @@ def run_standalone():
     """Run in standalone mode with uvicorn auto-reload"""
     port = find_available_port()
     
-    print("🚀 Starting Data Analyzer Pro API in standalone mode")
+    print("🚀 Starting Tauri + Svelte + Python Template API in standalone mode")
     print(f"🔗 API server starting at http://127.0.0.1:{port}")
     print(f"📖 API docs will be at http://127.0.0.1:{port}/docs")
     print("🔄 Auto-reload enabled")

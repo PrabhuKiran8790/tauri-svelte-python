@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Data Analyzer Pro",
+  "productName": "Tauri Svelte Python Template",
   "version": "2.1.0",
-  "identifier": "com.datacorp.dataanalyzerpro",
+  "identifier": "com.example.taurisveltetemplate",
   "build": {
     "beforeDevCommand": "pnpm dev:tauri",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Data Analyzer Pro",
+        "title": "Tauri Svelte Python Template",
         "width": 1400,
         "height": 900,
         "minWidth": 1000,
@@ -39,8 +39,8 @@
       "icons/icon.ico"
     ],
     "category": "Business",
-    "shortDescription": "Professional data analysis desktop app",
-    "longDescription": "Data Analyzer Pro is a comprehensive desktop application that combines powerful Python data processing capabilities with a modern, intuitive user interface. Perfect for data scientists, analysts, and business professionals who need advanced data manipulation tools.",
-    "copyright": "\u00a9 2024 DataCorp Solutions. All rights reserved."
+    "shortDescription": "Tauri + Svelte + Python desktop app template",
+    "longDescription": "A modern desktop application template that combines the power of Tauri (Rust), SvelteKit (TypeScript), and Python FastAPI. This template provides a complete cross-platform desktop development environment with a beautiful frontend, robust backend API, and native system integration.",
+    "copyright": "\u00a9 2024 Template Author. All rights reserved."
   }
 }
