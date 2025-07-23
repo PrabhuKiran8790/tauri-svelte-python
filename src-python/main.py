@@ -11,16 +11,20 @@ import threading
 import socket
 import subprocess
 import uvicorn
+import json
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn import Config, Server
 
 from api.endpoints import router as api_router
 
-PORT_API = 8009
+# Default port range for API server
+DEFAULT_PORT = 8008
+PORT_RANGE_START = 8008
+PORT_RANGE_END = 8020
+
 server_instance = None
 
-# Detect running mode
 def is_standalone_mode():
     """Detect if running in standalone mode vs sidecar mode"""
     return (
@@ -33,10 +37,51 @@ def is_standalone_mode():
 STANDALONE_MODE = is_standalone_mode()
 mode_label = "standalone" if STANDALONE_MODE else "sidecar"
 
-# Create FastAPI app
-app = FastAPI(title="Test App API", version="1.0.0")
+def is_port_available(port):
+    """Check if a port is available"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind(('127.0.0.1', port))
+            return True
+        except OSError:
+            return False
 
-# Add CORS
+def find_available_port(start_port=PORT_RANGE_START, end_port=PORT_RANGE_END):
+    """Find an available port in the specified range"""
+    for port in range(start_port, end_port + 1):
+        if is_port_available(port):
+            return port
+    
+    # If no port in range is available, try system-assigned port
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
+def announce_port_info(port):
+    """Announce port information in a structured way for frontend consumption"""
+    port_info = {
+        "type": "port_info",
+        "mode": mode_label,
+        "port": port,
+        "url": f"http://127.0.0.1:{port}",
+        "docs_url": f"http://127.0.0.1:{port}/docs",
+        "health_url": f"http://127.0.0.1:{port}/health"
+    }
+    
+    # Output structured JSON for frontend parsing
+    print(f"[sidecar] PORT_INFO: {json.dumps(port_info)}", flush=True)
+    
+    # Also output human-readable info
+    print(f"[{mode_label}] Using available port {port}", flush=True)
+    print(f"[{mode_label}] API server running at http://127.0.0.1:{port}", flush=True)
+    if not STANDALONE_MODE:
+        print(f"[{mode_label}] Health check: http://127.0.0.1:{port}/health", flush=True)
+        print(f"[{mode_label}] API docs: http://127.0.0.1:{port}/docs", flush=True)
+
+# Create FastAPI app
+app = FastAPI(title="Data Analyzer Pro API", version="2.1.0")
+
+# Add CORS - will be updated with discovered port
 cors_origins = [
     "http://localhost:5173",  # SvelteKit dev server
     "http://localhost:1420",  # Tauri dev server
@@ -59,48 +104,40 @@ app.include_router(api_router, prefix="/v1")
 @app.get("/")
 async def root():
     return {
-        "message": "Test App API", 
+        "message": "Data Analyzer Pro API", 
         "status": "running",
         "mode": mode_label,
-        "port": PORT_API
+        "version": "2.1.0"
     }
 
 @app.get("/health")
 async def health():
     return {"status": "healthy", "mode": mode_label}
 
-def is_port_available(port):
-    """Check if a port is available"""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.bind(('127.0.0.1', port))
-            return True
-        except OSError:
-            return False
-
-def find_available_port():
-    """Find an available port starting from PORT_API"""
-    port = PORT_API
-    while port < PORT_API + 10:  # Try 10 ports
-        if is_port_available(port):
-            print(f"[{mode_label}] Using available port {port}", flush=True)
-            return port
-        port += 1
-    
-    # If no port is available, use the default
-    print(f"[{mode_label}] No available ports found, using default {PORT_API}", flush=True)
-    return PORT_API
+@app.get("/port-info")
+async def port_info():
+    """Endpoint to get current port information"""
+    return {
+        "port": getattr(app.state, 'current_port', DEFAULT_PORT),
+        "mode": mode_label,
+        "available": True
+    }
 
 def start_api_server(**kwargs):
-    """Start the FastAPI server"""
+    """Start the FastAPI server with dynamic port discovery"""
     global server_instance
-    port = kwargs.get("port", find_available_port())
+    
+    # Find available port
+    port = find_available_port()
+    
+    # Store port in app state for reference
+    app.state.current_port = port
+    
+    # Announce port information
+    announce_port_info(port)
     
     try:
         if server_instance is None:
-            print(f"[{mode_label}] Starting API server on port {port}...", flush=True)
-            print(f"[{mode_label}] Server will be available at http://127.0.0.1:{port}", flush=True)
-            
             config = Config(app, host="127.0.0.1", port=port, log_level="info")
             server_instance = Server(config)
             asyncio.run(server_instance.serve())
@@ -108,6 +145,7 @@ def start_api_server(**kwargs):
             print(f"[{mode_label}] Server instance already running.", flush=True)
     except Exception as e:
         print(f"[{mode_label}] Error starting API server on port {port}: {e}", flush=True)
+        raise
 
 def stdin_loop():
     """Handle stdin commands in sidecar mode"""
@@ -139,11 +177,14 @@ def run_standalone():
     """Run in standalone mode with uvicorn auto-reload"""
     port = find_available_port()
     
-    print(f"🚀 Starting standalone development mode")
+    print("🚀 Starting Data Analyzer Pro API in standalone mode")
     print(f"🔗 API server starting at http://127.0.0.1:{port}")
     print(f"📖 API docs will be at http://127.0.0.1:{port}/docs")
-    print(f"🔄 Auto-reload enabled")
-    print(f"💡 Press Ctrl+C to stop\n")
+    print("🔄 Auto-reload enabled")
+    print("💡 Press Ctrl+C to stop\n")
+    
+    # Announce port for any listening processes
+    announce_port_info(port)
     
     try:
         uvicorn.run(

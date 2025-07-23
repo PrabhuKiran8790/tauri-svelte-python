@@ -11,6 +11,8 @@
   import { Label } from "$lib/components/ui/label";
   import { Badge } from "$lib/components/ui/badge";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
+  import { createApiStore, makeApiCall, tauriApi } from "$lib/tauri-api";
+  import type { ApiConfig } from "$lib/utils";
 
   let apiResponse = $state("");
   let fibNumber = $state(10);
@@ -19,10 +21,22 @@
   let isStreaming = $state(false);
   let isCalculating = $state(false);
 
+  // Create API store for reactive port discovery
+  const apiStore = createApiStore();
+  let apiConfig = $state<ApiConfig>({
+    baseUrl: "http://127.0.0.1:8008",
+    port: 8008,
+    available: false,
+  });
+
+  // Subscribe to API config changes
+  apiStore.subscribe((config) => {
+    apiConfig = config;
+  });
+
   async function testConnection() {
     try {
-      const response = await fetch(`http://127.0.0.1:8008/v1/connect`);
-      const data = await response.json();
+      const data = await makeApiCall("/v1/connect");
       apiResponse = JSON.stringify(data, null, 2);
     } catch (error) {
       apiResponse = `Connection failed: ${error}`;
@@ -35,15 +49,12 @@
     isCalculating = true;
     fibResult = "Calculating...";
 
-    // Use setTimeout to ensure this runs in a separate task queue
     setTimeout(async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8008/v1/fibonacci", {
+        const data = await makeApiCall("/v1/fibonacci", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ number: fibNumber }),
         });
-        const data = await response.json();
         fibResult = JSON.stringify(data, null, 2);
       } catch (error) {
         fibResult = `Fibonacci calculation failed: ${error}`;
@@ -59,10 +70,9 @@
     isStreaming = true;
     streamData = [];
 
-    // Use setTimeout to ensure this runs in a separate task queue
     setTimeout(async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8008/v1/stream");
+        const response = await fetch(`${apiConfig.baseUrl}/v1/stream`);
         const reader = response.body?.getReader();
         const decoder = new TextDecoder();
 
@@ -96,27 +106,70 @@
   function stopStreaming() {
     isStreaming = false;
   }
+
+  function refreshApiDiscovery() {
+    apiStore.refresh();
+  }
+
+  async function restartSidecar() {
+    try {
+      await tauriApi.restartSidecar();
+      // Refresh API discovery after restart
+      setTimeout(() => {
+        apiStore.refresh();
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to restart sidecar:", error);
+    }
+  }
 </script>
 
 <div class="min-h-screen w-full bg-background p-6">
   <div class="mx-auto max-w-7xl space-y-8">
     <div class="text-center">
-      <h1 class="text-4xl font-bold tracking-tight">Backend API Testing</h1>
+      <h1 class="text-4xl font-bold tracking-tight">Data Analyzer Pro</h1>
       <p class="text-lg text-muted-foreground mt-2">
-        Test your Python FastAPI backend endpoints
+        Test your Python FastAPI backend with dynamic port discovery
       </p>
+
+      <!-- API Status Indicator -->
+      <div class="flex items-center justify-center gap-4 mt-4">
+        <div class="flex items-center gap-2">
+          <Badge variant={apiConfig.available ? "default" : "destructive"}>
+            {apiConfig.available ? "API Connected" : "API Disconnected"}
+          </Badge>
+          {#if apiConfig.available}
+            <span class="text-sm text-muted-foreground"
+              >Port: {apiConfig.port}</span
+            >
+          {/if}
+        </div>
+        <Button variant="outline" size="sm" onclick={refreshApiDiscovery}>
+          Refresh Discovery
+        </Button>
+        <Button variant="outline" size="sm" onclick={restartSidecar}>
+          Restart Sidecar
+        </Button>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Connection Test</CardTitle>
-          <CardDescription
-            >Test the basic connection to your Python backend</CardDescription
-          >
+          <CardDescription>
+            Test the basic connection to your Python backend with auto-discovery
+          </CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
-          <Button onclick={testConnection} class="w-full">
+          <div class="text-sm text-muted-foreground mb-2">
+            Current API: {apiConfig.baseUrl}
+          </div>
+          <Button
+            onclick={testConnection}
+            class="w-full"
+            disabled={!apiConfig.available}
+          >
             Test /v1/connect
           </Button>
           {#if apiResponse}
@@ -130,9 +183,9 @@
       <Card>
         <CardHeader>
           <CardTitle>Fibonacci Calculator</CardTitle>
-          <CardDescription
-            >Calculate fibonacci numbers using the backend</CardDescription
-          >
+          <CardDescription>
+            Calculate fibonacci numbers using the backend with dynamic port
+          </CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
           <div class="space-y-2">
@@ -148,7 +201,10 @@
           <Button
             onclick={calculateFibonacci}
             class="w-full"
-            disabled={fibNumber < 0 || fibNumber > 10 || isCalculating}
+            disabled={fibNumber < 0 ||
+              fibNumber > 10 ||
+              isCalculating ||
+              !apiConfig.available}
           >
             {isCalculating ? "Calculating..." : "Calculate Fibonacci"}
           </Button>
@@ -163,15 +219,15 @@
       <Card>
         <CardHeader>
           <CardTitle>Streaming Data</CardTitle>
-          <CardDescription
-            >Test real-time data streaming from the backend</CardDescription
-          >
+          <CardDescription>
+            Test real-time data streaming with auto-discovered port
+          </CardDescription>
         </CardHeader>
         <CardContent class="space-y-4">
           <div class="flex gap-2">
             <Button
               onclick={startStreaming}
-              disabled={isStreaming}
+              disabled={isStreaming || !apiConfig.available}
               class="flex-1"
             >
               {isStreaming ? "Streaming..." : "Start Stream"}
@@ -202,5 +258,47 @@
         </CardContent>
       </Card>
     </div>
+
+    <!-- Port Discovery Info Card -->
+    <Card>
+      <CardHeader>
+        <CardTitle>Dynamic Port Discovery</CardTitle>
+        <CardDescription>
+          Information about the automatic port discovery system
+        </CardDescription>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="space-y-2">
+            <Label>Discovery Status</Label>
+            <Badge variant={apiConfig.available ? "default" : "secondary"}>
+              {apiConfig.available ? "Active" : "Searching..."}
+            </Badge>
+          </div>
+          <div class="space-y-2">
+            <Label>Current Port</Label>
+            <div class="text-sm font-mono bg-secondary p-2 rounded">
+              {apiConfig.port}
+            </div>
+          </div>
+          <div class="space-y-2">
+            <Label>Base URL</Label>
+            <div class="text-sm font-mono bg-secondary p-2 rounded">
+              {apiConfig.baseUrl}
+            </div>
+          </div>
+        </div>
+        <div class="text-sm text-muted-foreground">
+          <p>
+            🚀 The system automatically discovers available ports in the range
+            8008-8020.<br />
+            🔄 If port 8008 is busy, it will find the next available port.<br />
+            💾 Discovered configurations are cached for better performance.<br
+            />
+            🔗 All API calls automatically use the discovered port.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
   </div>
 </div>

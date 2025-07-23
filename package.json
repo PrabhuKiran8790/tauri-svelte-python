@@ -7,8 +7,8 @@
     "install-reqs": "pnpm install && pip3 install -r src-python/requirements.txt",
     "dev": "vite dev --port 5173",
     "dev:tauri": "vite dev --port 1420",
-    "dev:standalone": "concurrently \"cd src-python && uvicorn main:app --host 127.0.0.1 --port 8008 --reload\" \"vite dev --port 5173\"",
-    "dev:api": "cd src-python && uvicorn main:app --host 127.0.0.1 --port 8008 --reload",
+    "dev:standalone": "concurrently \"cd src-python && python main.py --standalone\" \"vite dev --port 5173\"",
+    "dev:api": "cd src-python && python main.py --standalone",
     "web:dev": "vite dev --port 5173 --host 0.0.0.0",
     "build:sidecar-windows": "pyinstaller -c -F --clean --name main-x86_64-pc-windows-msvc --distpath src-tauri/bin src-python/main.py",
     "build:sidecar-macos": "pyinstaller -c -F --clean --name main-aarch64-apple-darwin --distpath src-tauri/bin src-python/main.py",
@@ -27,6 +27,7 @@
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-http": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-shell": "^2.3.0",
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
